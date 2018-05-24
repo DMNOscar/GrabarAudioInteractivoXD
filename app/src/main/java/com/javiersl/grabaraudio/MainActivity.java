@@ -25,7 +25,7 @@ import android.widget.Toast;
 import java.io.File;
 import java.io.IOException;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements View.OnTouchListener {
 
     //inicializacion de varibles a utilizar
 
@@ -42,7 +42,7 @@ public class MainActivity extends AppCompatActivity {
     private float primerToqueX;// Variable para guardar la posicion en X del boton guardar
     private TextView txtMensajeEliminar;// TextView oara mostrar indicaciones al usuario
     private boolean estadoBoton = false;// Verificar si el boton grabar fue precionado
-
+    ClipData data = ClipData.newPlainText(" ", " ");
 
     /*Metodo onCreate*/
     @Override
@@ -82,73 +82,7 @@ public class MainActivity extends AppCompatActivity {
         });
 
         /*Metodo para escuchar el estado del boton*/
-        btnGrabarAudio.setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View view, MotionEvent event) {
-
-                /*switch para realizar una accion dependiendo del caso
-                * extraemos la accion realizada con event.getAction()
-                * */
-
-                switch (event.getAction()) {
-
-                    /*El caso ACTION_DOWN se identifica duando el (en este caso el boton) es presionado*/
-                    case MotionEvent.ACTION_DOWN:
-
-                        /*Verificamos el estado del boton si es precioando entra en el metodo
-                        * */
-                        if (!estadoBoton) {
-                            btnGrabarAudio.setX(primerToqueX);
-                            tiempo = System.currentTimeMillis();//Contamos el tiempo qe el boton es precionado
-                            btnGrabarAudio.setText("Grabando");// Se envia el texto al boton "Grabando"
-                            estadoBoton = true;//Cambiamos el estado del boton
-                            new GrabarAudio().execute();//Ejecutamoe el hijo encargado de la grabacion
-                        }
-
-                        break;
-                    /*Segundo caso ACTION_MOVE se identifica cuando el boton grabar es deslizado*/
-                    case MotionEvent.ACTION_MOVE:
-                        /*Auno no se de como funciona esto pero esta parte es la encargada de levantar el boton
-                        * y seguir por donde el usuario deslice por la pantalla
-                        * */
-                        ClipData data = ClipData.newPlainText(" ", " ");
-                        View.DragShadowBuilder shadowBuilder = new View.DragShadowBuilder(view);
-                        view.startDrag(data, shadowBuilder, view, 0);
-                        layoutEliminar.setVisibility(View.VISIBLE);// Hacemos visible el icono de eliminar
-
-                        break;
-                        /*El caso ACTION_UP  se identifica cuando el boton deja de ser precioando, pude ocurrie en cualquier momento
-                        * aunque el usuario mueva el boton de un lugar a otro
-                        * */
-                    case MotionEvent.ACTION_UP:
-                        /*Enviamos el valor obtenido en el primer toque para que el boton regrese a su lugar*/
-                        btnGrabarAudio.setX(primerToqueX);
-                        /*Ocultamos el icono eliminar*/
-                        layoutEliminar.setVisibility(View.GONE);
-                        /*Verificamos el tiempo que el boton fue precionado, esto para evitar que un error en tipo de ejecuacion
-                        * si el boton es precionado mas de un segundo (1200 ms) entra.
-                        * */
-                        if (((Long) System.currentTimeMillis() - tiempo) > 1200) {
-                            estadoBoton = false;//Cambimos el estado dell boton
-                            mediaRecorder.stop();//Detenemos la grabacion
-                            mediaRecorder.release();//Guardamos el archivo
-                            mediaRecorder = null;//Reiniciamos la variable para proximas grabaciones
-                            btnGrabarAudio.setText("Grabar");//Enviamos el texto inicial al boton grabar
-                            tiempo = null;//Reiniciamos el contador del tiempo
-                        } else {
-                            /*Si el boton es precionado menos de un segundo enviamoe el mensaje al usuario*/
-                            Toast.makeText(MainActivity.this, "Manten precionado para grabar", Toast.LENGTH_SHORT).show();
-                        }
-
-                        break;
-
-                }
-
-                return true;//Debolvemos un true para que entre contantemente en este metodo
-            }
-        });
-
-
+        btnGrabarAudio.setOnTouchListener(this);
         layoutEliminar.setOnDragListener(dragListener);//Hacemos un meto al metodo dragListener
     }
 
@@ -180,7 +114,6 @@ public class MainActivity extends AppCompatActivity {
         } catch (IOException e) {
             Toast.makeText(this, "Ha ocurrido un error en la reproducción", Toast.LENGTH_SHORT).show();
         }
-
         verificacion = false;
     }
 
@@ -197,11 +130,74 @@ public class MainActivity extends AppCompatActivity {
         else
             detenerReproduccion();
     }
+//////////////////////////////////////////////////////////////////////
+    @Override
+    public boolean onTouch(View view, MotionEvent event) {
+    /*switch para realizar una accion dependiendo del caso
+                 *extraemos la accion realizada con event.getAction()
+                 */
+
+        switch (event.getAction()) {
+
+           /*El caso ACTION_DOWN se identifica duando el (en este caso el boton) es presionado*/
+            case MotionEvent.ACTION_DOWN:
+                /*
+                *Verificamos el estado del boton si es precioando entra en el metodo
+                */
+             //   if (!estadoBoton) {
+                    btnGrabarAudio.setX(primerToqueX);
+                    tiempo = System.currentTimeMillis();//Contamos el tiempo qe el boton es precionado
+                    btnGrabarAudio.setText("Grabando");// Se envia el texto al boton "Grabando"
+                    estadoBoton = true;//Cambiamos el estado del boton
+                    new GrabarAudio().execute();//Ejecutamoe el hijo encargado de la grabacion
+              //  }
+
+                break;
+                        /*Segundo caso ACTION_MOVE se identifica cuando el boton grabar es deslizado*/
+            case MotionEvent.ACTION_MOVE:
+                    /*Auno no se de como funciona esto pero esta parte es la encargada de levantar el boton
+                     *y seguir por donde el usuario deslice por la pantalla
+                     */
+                    View.DragShadowBuilder shadowBuilder = new View.DragShadowBuilder(view);
+                    view.startDrag(data, shadowBuilder, view, 0);
+                    layoutEliminar.setVisibility(View.VISIBLE);// Hacemos visible el icono de eliminar
+
+                break;
+                        /*El caso ACTION_UP  se identifica cuando el boton deja de ser precioando, pude ocurrie en cualquier momento
+                        * aunque el usuario mueva el boton de un lugar a otro
+                        * */
+            case MotionEvent.ACTION_UP:
+
+                /*Enviamos el valor obtenido en el primer toque para que el boton regrese a su lugar*/
+                btnGrabarAudio.setX(primerToqueX);
+                /*Ocultamos el icono eliminar*/
+                layoutEliminar.setVisibility(View.GONE);
+                /*Verificamos el tiempo que el boton fue precionado, esto para evitar que un error en tipo de ejecuacion
+                 *si el boton es precionado mas de un segundo (1200 ms) entra.
+                 */
+                if (((Long) System.currentTimeMillis() - tiempo) > 1200) {
+                    estadoBoton = false;//Cambimos el estado dell boton
+                    mediaRecorder.stop();//Detenemos la grabacion
+                    mediaRecorder.release();//Guardamos el archivo
+                    mediaRecorder = null;//Reiniciamos la variable para proximas grabaciones
+                    btnGrabarAudio.setText("Grabar");//Enviamos el texto inicial al boton grabar
+                    tiempo = null;//Reiniciamos el contador del tiempo
+
+                } else {
+                            /*Si el boton es precionado menos de un segundo enviamoe el mensaje al usuario*/
+                    Toast.makeText(MainActivity.this, "Manten precionado para grabar", Toast.LENGTH_SHORT).show();
+                }
+
+                break;
+
+        }
+
+        return true;//Debolvemos un true para que entre contantemente en este metodo
+    }
 
 
-    ///////////////////////////////////////
     /*
-    * Hilo encargado de grabar el audio
+    *   Hilo encargado de grabar el audio
     */
 
     public class GrabarAudio extends AsyncTask<Void, Void, Void> {
@@ -244,7 +240,7 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public boolean onDrag(View view, DragEvent dragEvent) {
 
-            int   dragEventAction = dragEvent.getAction();//Obtenemos y guardamos la accion que se realiza
+            int dragEventAction = dragEvent.getAction();//Obtenemos y guardamos la accion que se realiza
             final View viewDrag = (View) dragEvent.getLocalState();//Obtenemos y guardamos que objeto es que interactuo con el contenedor eliminar
 
             /*switch comparamos el tipo de accion que se realiza*/
@@ -256,6 +252,7 @@ public class MainActivity extends AppCompatActivity {
                     //ACCIÓN ARRASTRE ENTRADA
                     eliminarAudio.setColorFilter(ContextCompat.getColor(MainActivity.this, R.color.colorEliminar));//Cambiamos el color del icono
                     txtMensajeEliminar.setText("Suelta para eliminar");//Cambiamos el texto
+                    btnGrabarAudio.setText("Grabar");//Enviamos el texto inicial al boton grabar
 
 
                     break;
@@ -280,7 +277,6 @@ public class MainActivity extends AppCompatActivity {
                     }
                     break;
             }
-
             return true;
         }
     };
@@ -295,7 +291,6 @@ public class MainActivity extends AppCompatActivity {
                 layoutEliminar.setVisibility(View.GONE);//Ocultamos el contenedor eliminar
             }
         }, 2000);//Tiempo establecido para reanudar el codigo para reanudar la ejecucion del codigo
-
     }
 
 }
