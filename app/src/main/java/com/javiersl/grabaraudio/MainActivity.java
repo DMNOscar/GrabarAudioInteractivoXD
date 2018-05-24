@@ -144,13 +144,13 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
                 /*
                 *Verificamos el estado del boton si es precioando entra en el metodo
                 */
-             //   if (!estadoBoton) {
+                if (!estadoBoton) {
                     btnGrabarAudio.setX(primerToqueX);
                     tiempo = System.currentTimeMillis();//Contamos el tiempo qe el boton es precionado
                     btnGrabarAudio.setText("Grabando");// Se envia el texto al boton "Grabando"
                     estadoBoton = true;//Cambiamos el estado del boton
                     new GrabarAudio().execute();//Ejecutamoe el hijo encargado de la grabacion
-              //  }
+               }
 
                 break;
                         /*Segundo caso ACTION_MOVE se identifica cuando el boton grabar es deslizado*/
