@@ -100,7 +100,6 @@ public class MainActivity extends AppCompatActivity
                             btGrabar.setText("Grabando");
                             estadoBoton=true;
                             new GrabarAudio().execute();
-
                         }
 
                         break;
@@ -177,6 +176,7 @@ public class MainActivity extends AppCompatActivity
              new File(nombreAudio).delete();
         } catch (Exception e) {
             Log.e("tag", e.getMessage()); }
+        estadoBoton =false;
         Toast.makeText(this, "Eliminado", Toast.LENGTH_SHORT).show();
     }
 

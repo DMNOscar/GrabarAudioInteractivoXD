@@ -6,6 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
+    android:gravity="center"
     tools:context="com.javiersl.grabaraudio.MainActivity"
     android:padding="16dp">
     <Button
@@ -16,22 +17,21 @@
         android:layout_margin="20dp"
         />
 
-        <RelativeLayout
-            android:id="@+id/linear"
-            android:layout_width="match_parent"
+    <RelativeLayout
+        android:id="@+id/linear"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <Button
+            android:id="@+id/btGrabar"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            >
+            android:layout_centerVertical="true"
+            android:drawableBottom="@drawable/ic_microfono" />
 
-            <Button
-                android:id="@+id/btGrabar"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_centerVertical="true"
-                android:drawableBottom="@drawable/ic_microfono"/>
+    </RelativeLayout>
 
-        </RelativeLayout>
-
-        <ImageView
+    <ImageView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_below="@id/linear"
@@ -42,29 +42,28 @@
 
     <LinearLayout
         android:id="@+id/ContenedorEliminar"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:visibility="gone"
-        android:layout_centerInParent="true"
         android:orientation="vertical"
-        >
+        android:visibility="gone">
 
         <ImageView
             android:id="@+id/eliminarGrabacion"
-            android:layout_width="match_parent"
+            android:layout_width="200dp"
             android:layout_height="200dp"
-            android:src="@drawable/ic_eliminar"
             android:layout_margin="10dp"
-            android:layout_centerVertical="true"
+            android:src="@drawable/ic_eliminar"
+
             />
+
         <TextView
             android:id="@+id/texteliminar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center"
-            android:textSize="20sp"
+            android:text="Arrastra aqui para eliminar"
             android:textColor="@color/colorNegro"
-            />
+            android:textSize="20sp" />
     </LinearLayout>
 
 </LinearLayout>
