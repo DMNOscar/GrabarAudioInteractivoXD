@@ -19,66 +19,62 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.File;
 import java.io.IOException;
 
-public class MainActivity extends AppCompatActivity
-{
-    private static final int REQUEST_CODE = 1;
-    private static final String PERMISOS[] = {Manifest.permission.WRITE_EXTERNAL_STORAGE,
-                            Manifest.permission.RECORD_AUDIO};
-    private Button btGrabar, btReproducir;
-    private static String nombreAudio;
-    private MediaRecorder mediaRecorder;
-    private boolean verificacion = true, estado;
-    private MediaPlayer mediaPlayer;
-    private ImageView eliminarAdio;
-    private RelativeLayout linear;
-    private LinearLayout  ContenedorEliminar;
-    private Long tiempo;
-    private float firstTouchX;
-    private TextView txtMensajeEliminar;
+public class MainActivity extends AppCompatActivity {
+
+    //inicializacion de varibles a utilizar
+
+    private static final int REQUEST_CODE = 1;//Respuesta de permisos
+    private static final String PERMISOS[] = {Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.RECORD_AUDIO};//Permisos especiales requerido
+    private Button btnGrabarAudio, btnReproducirAudio;//Botones grabar reprodicir
+    private static String nombreAudio;// Esta variabre contendra el nombre y la direccion dende se guardara el audio
+    private MediaRecorder mediaRecorder; //variable para guardar aduio
+    private boolean verificacion = true;//Verificar reproducir o detener la reproduccion
+    private MediaPlayer mediaPlayer;// Para reproducir el archivo creado
+    private ImageView eliminarAudio; //Icono de eliminar
+    private LinearLayout layoutEliminar; // El contenedor del icono eliminar
+    private Long tiempo;//varible para medir el tiempo que es precioando el boton de grabar
+    private float primerToqueX;// Variable para guardar la posicion en X del boton guardar
+    private TextView txtMensajeEliminar;// TextView oara mostrar indicaciones al usuario
+    private boolean estadoBoton = false;// Verificar si el boton grabar fue precionado
 
 
-    //Nuevo Boton
-
-    private boolean estadoBoton =false;
-
+    /*Metodo onCreate*/
     @Override
-    protected void onCreate(Bundle savedInstanceState)
-    {
+    protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        /*guardamoe le valor de los permisos necesarios*/
         int leer = ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE);
         int grabar = ActivityCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO);
 
+        /*Los comparamos para poder continuar con la ejeuccion de la app*/
         if (leer == PackageManager.PERMISSION_DENIED || grabar == PackageManager.PERMISSION_DENIED)
             ActivityCompat.requestPermissions(this, PERMISOS, REQUEST_CODE);
 
-        verificacion = true;
-        estado = true;
 
-        //Se define el nombre del archivo de audio
+        /*Añadimos el nombre de nuestro archivo (en este caso siempre sera el mismo) "audio.3gp" y e indicamos se de guardara
+        * en la memorria del telefono*/
         nombreAudio = Environment.getExternalStorageDirectory() + "/audio.3gp";
 
-        btGrabar = (Button)findViewById(R.id.btGrabar);
-        btReproducir = (Button)findViewById(R.id.btReproducir);
-        eliminarAdio = (ImageView) findViewById(R.id.eliminarGrabacion);
-        linear= (RelativeLayout) findViewById(R.id.linear);
-        ContenedorEliminar= (LinearLayout) findViewById(R.id.ContenedorEliminar);
+        /*Asignacion de controles*/
+        btnGrabarAudio = (Button) findViewById(R.id.btGrabar);
+        btnReproducirAudio = (Button) findViewById(R.id.btReproducir);
+        eliminarAudio = (ImageView) findViewById(R.id.eliminarGrabacion);
+        layoutEliminar = (LinearLayout) findViewById(R.id.ContenedorEliminar);
         txtMensajeEliminar = (TextView) findViewById(R.id.texteliminar);
 
+        /*Obtenemos las coordenadas den X del boton grabar */
+        primerToqueX = btnGrabarAudio.getX();
 
-
-        firstTouchX= btGrabar.getX();
-
-
-        btReproducir.setOnClickListener(new View.OnClickListener() {
+        /*Escuchar cuando el boton reproducir sea precionado*/
+        btnReproducirAudio.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 onPlay(verificacion);
@@ -86,135 +82,129 @@ public class MainActivity extends AppCompatActivity
         });
 
         /*Metodo para escuchar el estado del boton*/
-        btGrabar.setOnTouchListener(new View.OnTouchListener() {
+        btnGrabarAudio.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View view, MotionEvent event) {
 
+                /*switch para realizar una accion dependiendo del caso
+                * extraemos la accion realizada con event.getAction()
+                * */
+
                 switch (event.getAction()) {
 
+                    /*El caso ACTION_DOWN se identifica duando el (en este caso el boton) es presionado*/
                     case MotionEvent.ACTION_DOWN:
 
-                        if (!estadoBoton){
-
+                        /*Verificamos el estado del boton si es precioando entra en el metodo
+                        * */
+                        if (!estadoBoton) {
+                            btnGrabarAudio.setX(primerToqueX);
                             tiempo = System.currentTimeMillis();//Contamos el tiempo qe el boton es precionado
-                            btGrabar.setText("Grabando");
-                            estadoBoton=true;
-                            new GrabarAudio().execute();
+                            btnGrabarAudio.setText("Grabando");// Se envia el texto al boton "Grabando"
+                            estadoBoton = true;//Cambiamos el estado del boton
+                            new GrabarAudio().execute();//Ejecutamoe el hijo encargado de la grabacion
                         }
 
                         break;
-
+                    /*Segundo caso ACTION_MOVE se identifica cuando el boton grabar es deslizado*/
                     case MotionEvent.ACTION_MOVE:
-
+                        /*Auno no se de como funciona esto pero esta parte es la encargada de levantar el boton
+                        * y seguir por donde el usuario deslice por la pantalla
+                        * */
                         ClipData data = ClipData.newPlainText(" ", " ");
                         View.DragShadowBuilder shadowBuilder = new View.DragShadowBuilder(view);
                         view.startDrag(data, shadowBuilder, view, 0);
-                        ContenedorEliminar.setVisibility(View.VISIBLE);
+                        layoutEliminar.setVisibility(View.VISIBLE);// Hacemos visible el icono de eliminar
 
                         break;
-
+                        /*El caso ACTION_UP  se identifica cuando el boton deja de ser precioando, pude ocurrie en cualquier momento
+                        * aunque el usuario mueva el boton de un lugar a otro
+                        * */
                     case MotionEvent.ACTION_UP:
-
-                        btGrabar.setX(firstTouchX);
-                        ContenedorEliminar.setVisibility(View.GONE);
+                        /*Enviamos el valor obtenido en el primer toque para que el boton regrese a su lugar*/
+                        btnGrabarAudio.setX(primerToqueX);
+                        /*Ocultamos el icono eliminar*/
+                        layoutEliminar.setVisibility(View.GONE);
+                        /*Verificamos el tiempo que el boton fue precionado, esto para evitar que un error en tipo de ejecuacion
+                        * si el boton es precionado mas de un segundo (1200 ms) entra.
+                        * */
                         if (((Long) System.currentTimeMillis() - tiempo) > 1200) {
-                            estadoBoton =false;
-                            mediaRecorder.stop();
-                            mediaRecorder.release();
-                            mediaRecorder = null;
-                            btGrabar.setText("Grabar");
-                            tiempo = null;
+                            estadoBoton = false;//Cambimos el estado dell boton
+                            mediaRecorder.stop();//Detenemos la grabacion
+                            mediaRecorder.release();//Guardamos el archivo
+                            mediaRecorder = null;//Reiniciamos la variable para proximas grabaciones
+                            btnGrabarAudio.setText("Grabar");//Enviamos el texto inicial al boton grabar
+                            tiempo = null;//Reiniciamos el contador del tiempo
                         } else {
-
-                            Toast.makeText(MainActivity.this, "Deja precionado el boton", Toast.LENGTH_SHORT).show();
-
+                            /*Si el boton es precionado menos de un segundo enviamoe el mensaje al usuario*/
+                            Toast.makeText(MainActivity.this, "Manten precionado para grabar", Toast.LENGTH_SHORT).show();
                         }
 
                         break;
 
                 }
 
-                return true;
+                return true;//Debolvemos un true para que entre contantemente en este metodo
             }
         });
 
 
-
-
-        ContenedorEliminar.setOnDragListener(dragListener);
-    }
-
-    @Override
-    protected void onPause()
-    {
-        super.onPause();
-
-        //Se libera el objeto del audio
-        if(mediaRecorder != null)
-        {
-            mediaRecorder.release();
-            mediaRecorder = null;
-        }
-
-        if(mediaPlayer != null)
-        {
-            mediaPlayer.release();
-            mediaPlayer = null;
-        }
+        layoutEliminar.setOnDragListener(dragListener);//Hacemos un meto al metodo dragListener
     }
 
 
+    /*Metodo para eliminar el archivo de audio ANTES DE ENVIAR*/
     private void EliminarGrabacion() {
-        //Detiene la grabación y define a nulo por si se requiere una nueva
 
-        mediaRecorder.stop();
-        mediaRecorder.release();
-
-
+        mediaRecorder.stop();//Detenemos la gracion
+        mediaRecorder.release();//Guardamos el archivo
 
         try {
-             new File(nombreAudio).delete();
-        } catch (Exception e) {
-            Log.e("tag", e.getMessage()); }
-        estadoBoton =false;
-        Toast.makeText(this, "Eliminado", Toast.LENGTH_SHORT).show();
+            new File(nombreAudio).delete(); //Cremos un archivo nuevo, nombreAudio contiene el nombre y la hubicacion del archivo que vamos a eliminar
+            estadoBoton = false;//cambiamos e
+            Toast.makeText(this, "Eliminado", Toast.LENGTH_SHORT).show();
+        } catch (Exception e) {//En caso de error
+            Log.e("tag", e.getMessage());//Imprimimos la Exception optenida
+        }
+
     }
 
+    //  ESTOS METODOS SOLOS OCUPARE EN ESTE EJERCICIO
+    private void comenzarReproduccion() {
 
-    private void comenzarReproduccion()
-    {
         mediaPlayer = new MediaPlayer();
-        try
-        {
+        try {
             mediaPlayer.setDataSource(nombreAudio);
             mediaPlayer.prepare();
             mediaPlayer.start();
-        }catch (IOException e)
-        {
+        } catch (IOException e) {
             Toast.makeText(this, "Ha ocurrido un error en la reproducción", Toast.LENGTH_SHORT).show();
         }
 
-        verificacion=false;
+        verificacion = false;
     }
 
-    private void detenerReproduccion()
-    {
+    private void detenerReproduccion() {
         mediaPlayer.release();
         mediaPlayer = null;
-        verificacion=true;
+        verificacion = true;
     }
 
-    private void onPlay(boolean comenzarRep)
-    {
-        if(comenzarRep)
+
+    private void onPlay(boolean comenzarRep) {
+        if (comenzarRep)
             comenzarReproduccion();
         else
             detenerReproduccion();
     }
 
 
+    ///////////////////////////////////////
+    /*
+    * Hilo encargado de grabar el audio
+    */
 
-    public class  GrabarAudio extends AsyncTask<Void, Void, Void> {
+    public class GrabarAudio extends AsyncTask<Void, Void, Void> {
 
         @Override
         protected Void doInBackground(Void... params) {
@@ -231,12 +221,10 @@ public class MainActivity extends AppCompatActivity
             mediaRecorder.setOutputFile(nombreAudio);
             mediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
 
-            try
-            {
+            try {
                 //Prepara el audio
                 mediaRecorder.prepare();
-            }catch (IOException e)
-            {
+            } catch (IOException e) {
                 //Toast.makeText(this, "No se grabará correctamente", Toast.LENGTH_SHORT).show();
             }
 
@@ -248,47 +236,48 @@ public class MainActivity extends AppCompatActivity
     }
 
 
+    /*
+    * Metodo encargado de escuchar las interaciones con el Contenedor Eliminar
+    */
 
     View.OnDragListener dragListener = new View.OnDragListener() {
         @Override
         public boolean onDrag(View view, DragEvent dragEvent) {
 
-            int dragEventAction = dragEvent.getAction();
-            final View viewDrag = (View) dragEvent.getLocalState();
+            int   dragEventAction = dragEvent.getAction();//Obtenemos y guardamos la accion que se realiza
+            final View viewDrag = (View) dragEvent.getLocalState();//Obtenemos y guardamos que objeto es que interactuo con el contenedor eliminar
 
+            /*switch comparamos el tipo de accion que se realiza*/
             switch (dragEventAction) {
 
+                /*Caso ACTION_DRAG_ENTERED se detecta cuando el objeto entra en el contenedor eliminar*/
                 case DragEvent.ACTION_DRAG_ENTERED:
 
                     //ACCIÓN ARRASTRE ENTRADA
-                    eliminarAdio.setColorFilter(ContextCompat.getColor(MainActivity.this, R.color.colorEliminar));
-                    txtMensajeEliminar.setText("Suelta para eliminar");
-                   // ContenedorEliminar.setVisibility(View.VISIBLE);
-                    //Toast.makeText(MainActivity.this, "ACTION_DRAG_ENTERED", Toast.LENGTH_SHORT).show();
-                    break;
+                    eliminarAudio.setColorFilter(ContextCompat.getColor(MainActivity.this, R.color.colorEliminar));//Cambiamos el color del icono
+                    txtMensajeEliminar.setText("Suelta para eliminar");//Cambiamos el texto
 
+
+                    break;
+                /*
+                *Caso ACTION_DRAG_EXITED se detecta cuando el objeto sale del rango del contenedor
+                */
                 case DragEvent.ACTION_DRAG_EXITED:
                     //Cuando sale del contenedor
-                    txtMensajeEliminar.setText("Arraste aqui para eliminar");
-                    eliminarAdio.setColorFilter(ContextCompat.getColor(MainActivity.this, R.color.colorNegro));
-                  //  ContenedorEliminar.setVisibility(View.GONE);
+                    txtMensajeEliminar.setText("Arraste aqui para eliminar");//Enviamos el texto original
+                    eliminarAudio.setColorFilter(ContextCompat.getColor(MainActivity.this, R.color.colorNegro));//Cambiamos en el color del icono al inicial
+
                     break;
 
+                /* Caso ACTION_DROP  seidentifica cuanod el objeto es soltado entro del rango del icono eliminar*/
                 case DragEvent.ACTION_DROP:
 
                     if (viewDrag.getId() == R.id.btGrabar) {
-                        ContenedorEliminar.setVisibility(View.GONE);
-                        eliminarAdio.setColorFilter(ContextCompat.getColor(MainActivity.this, R.color.colorNegro));
+                        layoutEliminar.setVisibility(View.GONE);
+                        eliminarAudio.setColorFilter(ContextCompat.getColor(MainActivity.this, R.color.colorNegro));
                         EliminarGrabacion();
-                        EsconderBote();
+                        ocultarIconoEliminar();
                     }
-
-                    break;
-
-                default:
-                     //    Toast.makeText(MainActivity.this, "No entro en ningun case", Toast.LENGTH_SHORT).show();
-
-
                     break;
             }
 
@@ -296,17 +285,16 @@ public class MainActivity extends AppCompatActivity
         }
     };
 
-
-    private void EsconderBote() {
-        final Handler handler = new Handler();
+    /*Metodo encargado de ocultar el icono eliminar*/
+    private void ocultarIconoEliminar() {
+        final Handler handler = new Handler();//Objetopara "pausar" la ejecucion del codigo
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
                 // Ejecutar despues de 2s = 2000ms
-                ContenedorEliminar.setVisibility(View.GONE);
+                layoutEliminar.setVisibility(View.GONE);//Ocultamos el contenedor eliminar
             }
-        }, 2000);
-
+        }, 2000);//Tiempo establecido para reanudar el codigo para reanudar la ejecucion del codigo
 
     }
 
