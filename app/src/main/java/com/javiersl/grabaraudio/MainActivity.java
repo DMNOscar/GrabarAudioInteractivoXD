@@ -34,7 +34,7 @@ public class MainActivity extends AppCompatActivity
     private Button btGrabar, btReproducir;
     private static String nombreAudio;
     private MediaRecorder mediaRecorder;
-    private boolean verificacion, estado;
+    private boolean verificacion = true, estado;
     private MediaPlayer mediaPlayer;
     private ImageView eliminarAdio;
     private RelativeLayout linear;
@@ -81,7 +81,7 @@ public class MainActivity extends AppCompatActivity
         btReproducir.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                onPlay(true);
+                onPlay(verificacion);
             }
         });
 
@@ -193,12 +193,15 @@ public class MainActivity extends AppCompatActivity
         {
             Toast.makeText(this, "Ha ocurrido un error en la reproducción", Toast.LENGTH_SHORT).show();
         }
+
+        verificacion=false;
     }
 
     private void detenerReproduccion()
     {
         mediaPlayer.release();
         mediaPlayer = null;
+        verificacion=true;
     }
 
     private void onPlay(boolean comenzarRep)
